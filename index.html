@@ -92,6 +92,19 @@
             background: #fee2e2;
             border-radius: 8px;
         }
+        .explanation {
+            font-size: 14px;
+            color: #dc2626;
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: #fef2f2;
+            border-radius: 8px;
+            border-left: 4px solid #dc2626;
+            display: none;
+        }
+        .explanation.show {
+            display: block;
+        }
         .btn {
             display: block;
             width: 100%;
@@ -142,6 +155,7 @@
             .question-block { padding: 14px 14px 12px; }
             .question-text { font-size: 16px; }
             .option { font-size: 15px; padding: 5px 6px; }
+            .explanation { font-size: 13px; }
             .btn { font-size: 17px; padding: 14px; }
         }
     </style>
@@ -149,12 +163,12 @@
 <body>
 <div class="container">
     <h1>⚡ Тест по электронике и процессорам</h1>
-    <div class="subhead">20 вопросов · От простых к сложным · Выберите один вариант</div>
+    <div class="subhead">20 вопросов · Порядок случайный · Выберите один вариант</div>
 
     <div id="testContainer"></div>
 
     <button class="btn" id="checkBtn">✅ Проверить ответы</button>
-    <button class="btn reset-btn" id="resetBtn">🔄 Сбросить и начать заново</button>
+    <button class="btn reset-btn" id="resetBtn">🔄 Перемешать и начать заново</button>
 
     <div class="result-box" id="resultBox">
         <span id="resultText"></span>
@@ -163,8 +177,8 @@
 </div>
 
 <script>
-    // ----- ВОПРОСЫ И ПРАВИЛЬНЫЕ ОТВЕТЫ -----
-    const questions = [
+    // ----- ИСХОДНЫЕ ВОПРОСЫ (неизменяемые) -----
+    const originalQuestions = [
         {
             q: '1. Что такое процессор?',
             options: [
@@ -173,17 +187,19 @@
                 'Устройство для ввода информации',
                 'Блок питания компьютера'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'Процессор выполняет вычисления и управляет ими, а не хранит данные и не питает компьютер.'
         },
         {
             q: '2. Что такое транзистор?',
             options: [
-                'Элемент для усиления электрических сигналов',
+                'Полупроводниковый прибор, который может усиливать сигнал или работать как ключ, изменяя своё сопротивление под действием управляющего сигнала',
                 'Устройство для хранения большого объёма данных',
                 'Соединительный провод',
-                'Резистор с переменным сопротивлением'
+                'целый компьютер на одном кристалле'
             ],
-            correct: 0 // А
+            correct: 0,
+            explanation: 'Транзистор — это активный компонент, а не хранилище, не провод и не компьютер на кристалле (это микроконтроллер).'
         },
         {
             q: '3. Микроконтроллер – это:',
@@ -193,7 +209,8 @@
                 'Только память для хранения программ',
                 'Устройство для подключения к интернету'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'Микроконтроллер содержит процессор и периферию на одном кристалле, он не является мощным компьютером и не просто память или модем.'
         },
         {
             q: '4. Какое устройство внутри процессора управляет работой всех остальных устройств по заданной программе?',
@@ -203,7 +220,8 @@
                 'Регистры процессорной памяти',
                 'Шина данных'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'УУ – это «дирижёр» процессора, а АЛУ выполняет операции, регистры хранят данные, шина данных передаёт их.'
         },
         {
             q: '5. Для чего служит АЛУ (арифметико-логическое устройство)?',
@@ -213,7 +231,8 @@
                 'Для передачи данных между процессором и памятью',
                 'Для усиления электрических сигналов'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'АЛУ – это «вычислитель», он не хранит данные и не передаёт их, а выполняет операции над ними.'
         },
         {
             q: '6. Какая шина служит для передачи данных между процессором и внешней памятью или периферийными устройствами?',
@@ -223,7 +242,8 @@
                 'Шина данных',
                 'Шина питания'
             ],
-            correct: 2 // В
+            correct: 2,
+            explanation: 'Шина данных передаёт сами данные, адресная указывает, куда, а управляющая – какие действия выполнять.'
         },
         {
             q: '7. Что такое GPIO (порты ввода-вывода общего назначения) в микроконтроллере?',
@@ -233,7 +253,8 @@
                 'Выводы (ножки) для подключения внешних устройств, которые можно настроить как вход или выход',
                 'Интерфейс для подключения WiFi'
             ],
-            correct: 2 // В
+            correct: 2,
+            explanation: 'GPIO – это физические выводы, а не программа, память или беспроводной модуль.'
         },
         {
             q: '8. Из какого материала в основном изготавливают микропроцессоры?',
@@ -243,7 +264,8 @@
                 'Оксид кремния (кремний)',
                 'Пластмасса'
             ],
-            correct: 2 // В
+            correct: 2,
+            explanation: 'Основа – кремний (точнее, его оксид), а медь и золото используют для проводников, но не как основной материал.'
         },
         {
             q: '9. Как соединены отверстия на макетной плате (внутри одной «рейки» по 5 отверстий)?',
@@ -253,17 +275,19 @@
                 'Соединены только крайние отверстия',
                 'Соединены по диагонали'
             ],
-            correct: 0 // А
+            correct: 0,
+            explanation: 'Внутри одной рейки все 5 отверстий замкнуты, это основа макетной платы.'
         },
         {
-            q: '10. Что означает закон Ома (в упрощённом виде)?',
+            q: '10. Согласно закону Ома, сила тока в проводнике прямо пропорциональна …',
             options: [
-                'Сила тока прямо пропорциональна напряжению и обратно пропорциональна сопротивлению (I = U/R)',
-                'Сопротивление равно напряжению, умноженному на ток',
-                'Напряжение равно силе тока, умноженной на сопротивление (U = I·R)',
-                'Ток не зависит от напряжения'
+                'напряжению на концах проводника',
+                'сопротивлению проводника',
+                'обратно пропорциональна напряжению',
+                'не зависит от напряжения'
             ],
-            correct: 0 // А (выбрали вариант с формулой I=U/R)
+            correct: 0,
+            explanation: 'I = U/R – ток растёт с напряжением и падает с сопротивлением.'
         },
         {
             q: '11. Если увеличить сопротивление в цепи при неизменном напряжении, что произойдёт с силой тока?',
@@ -273,7 +297,8 @@
                 'Не изменится',
                 'Станет равной нулю'
             ],
-            correct: 0 // А
+            correct: 0,
+            explanation: 'По закону Ома I = U/R, при росте R ток уменьшается (но не до нуля, если сопротивление конечно).'
         },
         {
             q: '12. Какое устройство в процессоре отвечает за хранение нескольких чисел, с которыми процессор работает непосредственно?',
@@ -283,7 +308,8 @@
                 'Кэш-память',
                 'Оперативная память'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'Регистры – это сверхбыстрая внутренняя память процессора, а жёсткий диск, кэш и ОЗУ – внешние по отношению к ядру.'
         },
         {
             q: '13. Для чего нужна шина управления в процессоре?',
@@ -293,7 +319,8 @@
                 'Для передачи адреса ячейки памяти',
                 'Для подачи питания'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'Шина управления передаёт команды (чтение/запись и др.), а не данные и не адрес.'
         },
         {
             q: '14. Как называется элемент, который строится из транзисторов и выполняет простейшие логические операции (И, ИЛИ, НЕ и т.п.)?',
@@ -303,7 +330,8 @@
                 'Сумматор',
                 'Триггер'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'Логический элемент – это базовая схема из транзисторов, а сумматор, триггер и регистр – более сложные узлы.'
         },
         {
             q: '15. Что произойдёт, если при сборке схемы на макетной плате ножки компонентов, которые должны быть соединены, окажутся на разных вертикальных рейках (не соединённых между собой)?',
@@ -313,7 +341,8 @@
                 'Произойдёт короткое замыкание',
                 'Ничего, так как макетная плата соединяет все отверстия'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'Рейки не соединены между собой, поэтому контакта не будет – схема не заработает.'
         },
         {
             q: '16. Почему при сборке схемы нужно особенно внимательно следить за полярными компонентами (с плюсом и минусом)?',
@@ -323,7 +352,8 @@
                 'Их сложнее вставлять',
                 'Они имеют другой цвет'
             ],
-            correct: 0 // А
+            correct: 0,
+            explanation: 'Полярность критична – при обратном включении компонент может сгореть или не работать.'
         },
         {
             q: '17. Что такое электрическое сопротивление (по определению из текста)?',
@@ -333,7 +363,8 @@
                 'Скорость движения заряженных частиц',
                 'Напряжение на концах проводника'
             ],
-            correct: 0 // А
+            correct: 0,
+            explanation: 'Сопротивление – это мера «трудности» для тока, а не количество электронов, скорость или напряжение.'
         },
         {
             q: '18. Какой элемент процессора является самым массовым продуктом за всю историю человечества (по тексту)?',
@@ -343,7 +374,8 @@
                 'Конденсатор',
                 'Диод'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'В тексте сказано, что транзисторов произведено в 10 миллиардов раз больше, чем людей – это абсолютный рекорд.'
         },
         {
             q: '19. Для чего служит шина адреса в процессоре?',
@@ -353,7 +385,8 @@
                 'Для передачи управляющих сигналов',
                 'Для подачи тактовой частоты'
             ],
-            correct: 1 // Б
+            correct: 1,
+            explanation: 'Адресная шина указывает, куда именно процессор хочет обратиться, а не передаёт данные или команды.'
         },
         {
             q: '20. В чём главное отличие микроконтроллера от процессора (по тексту)?',
@@ -363,17 +396,57 @@
                 'У микроконтроллера больше транзисторов',
                 'Микроконтроллер не может выполнять логические операции'
             ],
-            correct: 0 // А
+            correct: 0,
+            explanation: 'Микроконтроллер – это «всё в одном» для управления, процессор – мощный вычислитель без встроенной периферии.'
         }
     ];
 
+    // ----- ПЕРЕМЕШИВАНИЕ (Фишер-Йетс) -----
+    function shuffle(arr) {
+        const a = arr.slice(); // копия
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    // ----- ПЕРЕМЕШИВАНИЕ ВОПРОСОВ И ВАРИАНТОВ -----
+    function shuffleQuestions(original) {
+        // Сначала копируем вопросы
+        const shuffled = original.map(q => ({
+            q: q.q,
+            options: q.options.slice(), // копия вариантов
+            correct: q.correct,
+            explanation: q.explanation
+        }));
+        // Перемешиваем вопросы
+        const shuffledQuestions = shuffle(shuffled);
+        // Для каждого вопроса перемешиваем варианты и пересчитываем correct
+        return shuffledQuestions.map(q => {
+            const opts = q.options;
+            const correctText = opts[q.correct]; // правильный текст
+            const shuffledOpts = shuffle(opts);
+            const newCorrectIdx = shuffledOpts.indexOf(correctText);
+            return {
+                q: q.q,
+                options: shuffledOpts,
+                correct: newCorrectIdx,
+                explanation: q.explanation
+            };
+        });
+    }
+
+    // ----- СОСТОЯНИЕ -----
+    let currentQuestions = shuffleQuestions(originalQuestions);
+    let userAnswers = new Array(currentQuestions.length).fill(null);
+
     // ----- РЕНДЕРИНГ -----
     const container = document.getElementById('testContainer');
-    let userAnswers = new Array(questions.length).fill(null);
 
     function render() {
         container.innerHTML = '';
-        questions.forEach((q, idx) => {
+        currentQuestions.forEach((q, idx) => {
             const block = document.createElement('div');
             block.className = 'question-block';
             block.dataset.qIndex = idx;
@@ -406,15 +479,25 @@
                 optDiv.appendChild(label);
                 optionsDiv.appendChild(optDiv);
 
-                // Событие выбора
                 radio.addEventListener('change', function() {
                     if (this.checked) {
                         userAnswers[idx] = parseInt(this.value);
+                        // скрываем пояснение, если ответ меняется после проверки
+                        const expl = block.querySelector('.explanation');
+                        if (expl) expl.classList.remove('show');
                     }
                 });
             });
 
             block.appendChild(optionsDiv);
+
+            // Блок для пояснения
+            const explDiv = document.createElement('div');
+            explDiv.className = 'explanation';
+            explDiv.id = `expl_${idx}`;
+            explDiv.textContent = q.explanation || '';
+            block.appendChild(explDiv);
+
             container.appendChild(block);
         });
     }
@@ -431,17 +514,21 @@
         let correctCount = 0;
         const blocks = document.querySelectorAll('.question-block');
 
-        // Сначала снимаем подсветку
-        blocks.forEach(block => block.classList.remove('highlight-correct'));
+        // Сброс подсветки и пояснений
+        blocks.forEach(block => {
+            block.classList.remove('highlight-correct');
+            const expl = block.querySelector('.explanation');
+            if (expl) expl.classList.remove('show');
+        });
 
         blocks.forEach((block, idx) => {
             const options = block.querySelectorAll('.option');
-            const correctIdx = questions[idx].correct;
+            const correctIdx = currentQuestions[idx].correct;
             const userIdx = userAnswers[idx];
+            const expl = block.querySelector('.explanation');
 
             options.forEach((opt, optIdx) => {
                 opt.classList.remove('correct', 'wrong');
-                // Добавляем метки
                 const existingMark = opt.querySelector('.correct-mark, .wrong-mark');
                 if (existingMark) existingMark.remove();
 
@@ -460,32 +547,31 @@
                 }
             });
 
-            if (userIdx === correctIdx) correctCount++;
+            if (userIdx === correctIdx) {
+                correctCount++;
+            } else if (userIdx !== null && userIdx !== correctIdx && expl) {
+                expl.classList.add('show');
+            }
+
             block.classList.add('highlight-correct');
         });
 
-        resultText.textContent = `Правильных ответов: ${correctCount} из ${questions.length}`;
+        resultText.textContent = `Правильных ответов: ${correctCount} из ${currentQuestions.length}`;
         resultBox.classList.add('show');
     }
 
-    function resetTest() {
-        userAnswers.fill(null);
-        document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
-        document.querySelectorAll('.question-block').forEach(block => {
-            block.classList.remove('highlight-correct');
-            block.querySelectorAll('.option').forEach(opt => {
-                opt.classList.remove('correct', 'wrong');
-                const marks = opt.querySelectorAll('.correct-mark, .wrong-mark');
-                marks.forEach(m => m.remove());
-            });
-        });
+    function resetAndShuffle() {
+        // Перемешиваем всё заново
+        currentQuestions = shuffleQuestions(originalQuestions);
+        userAnswers = new Array(currentQuestions.length).fill(null);
+        // Очищаем результат
         resultBox.classList.remove('show');
+        // Перерендериваем
+        render();
     }
 
     checkBtn.addEventListener('click', checkAnswers);
-    resetBtn.addEventListener('click', resetTest);
-
-    // Если все ответы уже выбраны, можно проверить, но не обязательно
+    resetBtn.addEventListener('click', resetAndShuffle);
 </script>
 </body>
 </html>
