@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Тест: Процессоры, микроконтроллеры, электроника</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 16px 12px 40px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #0f172a;
+        }
+        .subhead {
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+        .question-block {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 18px 14px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            border: 1px solid #e9edf2;
+        }
+        .question-text {
+            font-size: 17px;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            transition: background 0.1s ease;
+            font-size: 16px;
+            line-height: 1.3;
+        }
+        .option:hover {
+            background: #f1f5f9;
+        }
+        .option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            accent-color: #2563eb;
+            margin: 0;
+        }
+        .option label {
+            flex: 1;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+        .correct-mark, .wrong-mark {
+            font-weight: 700;
+            font-size: 18px;
+            margin-left: 6px;
+        }
+        .correct-mark { color: #16a34a; }
+        .wrong-mark { color: #dc2626; }
+        .highlight-correct .option.correct {
+            background: #dcfce7;
+            border-radius: 8px;
+        }
+        .highlight-correct .option.wrong {
+            background: #fee2e2;
+            border-radius: 8px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-top: 8px;
+        }
+        .btn:active {
+            background: #1d4ed8;
+            transform: scale(0.98);
+        }
+        .result-box {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-top: 20px;
+            border: 2px solid #2563eb;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            display: none;
+        }
+        .result-box.show {
+            display: block;
+        }
+        .reset-btn {
+            background: #64748b;
+            margin-top: 8px;
+        }
+        .reset-btn:active {
+            background: #475569;
+        }
+        .footer {
+            margin-top: 24px;
+            font-size: 13px;
+            color: #94a3b8;
+            text-align: center;
+        }
+        @media (max-width: 480px) {
+            body { padding: 12px 8px 30px; }
+            .question-block { padding: 14px 14px 12px; }
+            .question-text { font-size: 16px; }
+            .option { font-size: 15px; padding: 5px 6px; }
+            .btn { font-size: 17px; padding: 14px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>⚡ Тест по электронике и процессорам</h1>
+    <div class="subhead">20 вопросов · От простых к сложным · Выберите один вариант</div>
+
+    <div id="testContainer"></div>
+
+    <button class="btn" id="checkBtn">✅ Проверить ответы</button>
+    <button class="btn reset-btn" id="resetBtn">🔄 Сбросить и начать заново</button>
+
+    <div class="result-box" id="resultBox">
+        <span id="resultText"></span>
+    </div>
+    <div class="footer">Тест создан для Салавата · Удачи!</div>
+</div>
+
+<script>
+    // ----- ВОПРОСЫ И ПРАВИЛЬНЫЕ ОТВЕТЫ -----
+    const questions = [
+        {
+            q: '1. Что такое процессор?',
+            options: [
+                'Устройство для хранения данных',
+                'Прибор, выполняющий последовательность арифметических и логических операций над данными, изменяя ход выполнения в зависимости от результатов',
+                'Устройство для ввода информации',
+                'Блок питания компьютера'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '2. Что такое транзистор?',
+            options: [
+                'Элемент для усиления электрических сигналов',
+                'Устройство для хранения большого объёма данных',
+                'Соединительный провод',
+                'Резистор с переменным сопротивлением'
+            ],
+            correct: 0 // А
+        },
+        {
+            q: '3. Микроконтроллер – это:',
+            options: [
+                'Мощный компьютер для научных расчётов',
+                'Упрощённый процессор с дополнительными периферийными устройствами (память, таймеры, порты ввода-вывода), предназначенный для управления оборудованием',
+                'Только память для хранения программ',
+                'Устройство для подключения к интернету'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '4. Какое устройство внутри процессора управляет работой всех остальных устройств по заданной программе?',
+            options: [
+                'Арифметико-логическое устройство (АЛУ)',
+                'Устройство управления (УУ)',
+                'Регистры процессорной памяти',
+                'Шина данных'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '5. Для чего служит АЛУ (арифметико-логическое устройство)?',
+            options: [
+                'Для хранения промежуточных результатов',
+                'Для выполнения арифметических и логических операций по командам программы',
+                'Для передачи данных между процессором и памятью',
+                'Для усиления электрических сигналов'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '6. Какая шина служит для передачи данных между процессором и внешней памятью или периферийными устройствами?',
+            options: [
+                'Шина адреса',
+                'Шина управления',
+                'Шина данных',
+                'Шина питания'
+            ],
+            correct: 2 // В
+        },
+        {
+            q: '7. Что такое GPIO (порты ввода-вывода общего назначения) в микроконтроллере?',
+            options: [
+                'Программа для обработки сигналов',
+                'Внутренняя память для хранения данных',
+                'Выводы (ножки) для подключения внешних устройств, которые можно настроить как вход или выход',
+                'Интерфейс для подключения WiFi'
+            ],
+            correct: 2 // В
+        },
+        {
+            q: '8. Из какого материала в основном изготавливают микропроцессоры?',
+            options: [
+                'Медь',
+                'Золото',
+                'Оксид кремния (кремний)',
+                'Пластмасса'
+            ],
+            correct: 2 // В
+        },
+        {
+            q: '9. Как соединены отверстия на макетной плате (внутри одной «рейки» по 5 отверстий)?',
+            options: [
+                'Все пять отверстий соединены между собой электрически',
+                'Каждое отверстие изолировано',
+                'Соединены только крайние отверстия',
+                'Соединены по диагонали'
+            ],
+            correct: 0 // А
+        },
+        {
+            q: '10. Что означает закон Ома (в упрощённом виде)?',
+            options: [
+                'Сила тока прямо пропорциональна напряжению и обратно пропорциональна сопротивлению (I = U/R)',
+                'Сопротивление равно напряжению, умноженному на ток',
+                'Напряжение равно силе тока, умноженной на сопротивление (U = I·R)',
+                'Ток не зависит от напряжения'
+            ],
+            correct: 0 // А (выбрали вариант с формулой I=U/R)
+        },
+        {
+            q: '11. Если увеличить сопротивление в цепи при неизменном напряжении, что произойдёт с силой тока?',
+            options: [
+                'Уменьшится',
+                'Увеличится',
+                'Не изменится',
+                'Станет равной нулю'
+            ],
+            correct: 0 // А
+        },
+        {
+            q: '12. Какое устройство в процессоре отвечает за хранение нескольких чисел, с которыми процессор работает непосредственно?',
+            options: [
+                'Жёсткий диск',
+                'Регистры процессорной памяти',
+                'Кэш-память',
+                'Оперативная память'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '13. Для чего нужна шина управления в процессоре?',
+            options: [
+                'Для передачи данных',
+                'Для передачи управляющих сигналов, чтобы устройства понимали, что процессор хочет – читать или записывать',
+                'Для передачи адреса ячейки памяти',
+                'Для подачи питания'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '14. Как называется элемент, который строится из транзисторов и выполняет простейшие логические операции (И, ИЛИ, НЕ и т.п.)?',
+            options: [
+                'Регистр',
+                'Логический элемент',
+                'Сумматор',
+                'Триггер'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '15. Что произойдёт, если при сборке схемы на макетной плате ножки компонентов, которые должны быть соединены, окажутся на разных вертикальных рейках (не соединённых между собой)?',
+            options: [
+                'Схема будет работать правильно',
+                'Схема не будет работать, так как электрического соединения не будет',
+                'Произойдёт короткое замыкание',
+                'Ничего, так как макетная плата соединяет все отверстия'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '16. Почему при сборке схемы нужно особенно внимательно следить за полярными компонентами (с плюсом и минусом)?',
+            options: [
+                'Их неправильное подключение может привести к неработе или выходу компонента из строя',
+                'Полярность не важна',
+                'Их сложнее вставлять',
+                'Они имеют другой цвет'
+            ],
+            correct: 0 // А
+        },
+        {
+            q: '17. Что такое электрическое сопротивление (по определению из текста)?',
+            options: [
+                'Физическая величина, характеризующая свойство проводника препятствовать прохождению электрического тока',
+                'Количество электронов в проводнике',
+                'Скорость движения заряженных частиц',
+                'Напряжение на концах проводника'
+            ],
+            correct: 0 // А
+        },
+        {
+            q: '18. Какой элемент процессора является самым массовым продуктом за всю историю человечества (по тексту)?',
+            options: [
+                'Резистор',
+                'Транзистор',
+                'Конденсатор',
+                'Диод'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '19. Для чего служит шина адреса в процессоре?',
+            options: [
+                'Для передачи данных',
+                'Для передачи уникального адреса ячейки памяти или устройства, к которому обращается процессор',
+                'Для передачи управляющих сигналов',
+                'Для подачи тактовой частоты'
+            ],
+            correct: 1 // Б
+        },
+        {
+            q: '20. В чём главное отличие микроконтроллера от процессора (по тексту)?',
+            options: [
+                'Микроконтроллер содержит на кристалле дополнительные периферийные устройства (память, таймеры, порты) и предназначен для управления, а процессор – для сложных вычислений',
+                'Микроконтроллер работает быстрее',
+                'У микроконтроллера больше транзисторов',
+                'Микроконтроллер не может выполнять логические операции'
+            ],
+            correct: 0 // А
+        }
+    ];
+
+    // ----- РЕНДЕРИНГ -----
+    const container = document.getElementById('testContainer');
+    let userAnswers = new Array(questions.length).fill(null);
+
+    function render() {
+        container.innerHTML = '';
+        questions.forEach((q, idx) => {
+            const block = document.createElement('div');
+            block.className = 'question-block';
+            block.dataset.qIndex = idx;
+
+            const qText = document.createElement('div');
+            qText.className = 'question-text';
+            qText.textContent = q.q;
+            block.appendChild(qText);
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'options';
+
+            q.options.forEach((opt, optIdx) => {
+                const optDiv = document.createElement('div');
+                optDiv.className = 'option';
+                optDiv.dataset.optIndex = optIdx;
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = `q${idx}`;
+                radio.value = optIdx;
+                radio.id = `q${idx}_${optIdx}`;
+                if (userAnswers[idx] === optIdx) radio.checked = true;
+
+                const label = document.createElement('label');
+                label.htmlFor = `q${idx}_${optIdx}`;
+                label.textContent = opt;
+
+                optDiv.appendChild(radio);
+                optDiv.appendChild(label);
+                optionsDiv.appendChild(optDiv);
+
+                // Событие выбора
+                radio.addEventListener('change', function() {
+                    if (this.checked) {
+                        userAnswers[idx] = parseInt(this.value);
+                    }
+                });
+            });
+
+            block.appendChild(optionsDiv);
+            container.appendChild(block);
+        });
+    }
+
+    render();
+
+    // ----- ПРОВЕРКА -----
+    const checkBtn = document.getElementById('checkBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const resultBox = document.getElementById('resultBox');
+    const resultText = document.getElementById('resultText');
+
+    function checkAnswers() {
+        let correctCount = 0;
+        const blocks = document.querySelectorAll('.question-block');
+
+        // Сначала снимаем подсветку
+        blocks.forEach(block => block.classList.remove('highlight-correct'));
+
+        blocks.forEach((block, idx) => {
+            const options = block.querySelectorAll('.option');
+            const correctIdx = questions[idx].correct;
+            const userIdx = userAnswers[idx];
+
+            options.forEach((opt, optIdx) => {
+                opt.classList.remove('correct', 'wrong');
+                // Добавляем метки
+                const existingMark = opt.querySelector('.correct-mark, .wrong-mark');
+                if (existingMark) existingMark.remove();
+
+                if (optIdx === correctIdx) {
+                    opt.classList.add('correct');
+                    const mark = document.createElement('span');
+                    mark.className = 'correct-mark';
+                    mark.textContent = ' ✓';
+                    opt.appendChild(mark);
+                } else if (optIdx === userIdx && userIdx !== correctIdx) {
+                    opt.classList.add('wrong');
+                    const mark = document.createElement('span');
+                    mark.className = 'wrong-mark';
+                    mark.textContent = ' ✗';
+                    opt.appendChild(mark);
+                }
+            });
+
+            if (userIdx === correctIdx) correctCount++;
+            block.classList.add('highlight-correct');
+        });
+
+        resultText.textContent = `Правильных ответов: ${correctCount} из ${questions.length}`;
+        resultBox.classList.add('show');
+    }
+
+    function resetTest() {
+        userAnswers.fill(null);
+        document.querySelectorAll('input[type="radio"]').forEach(radio => radio.checked = false);
+        document.querySelectorAll('.question-block').forEach(block => {
+            block.classList.remove('highlight-correct');
+            block.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('correct', 'wrong');
+                const marks = opt.querySelectorAll('.correct-mark, .wrong-mark');
+                marks.forEach(m => m.remove());
+            });
+        });
+        resultBox.classList.remove('show');
+    }
+
+    checkBtn.addEventListener('click', checkAnswers);
+    resetBtn.addEventListener('click', resetTest);
+
+    // Если все ответы уже выбраны, можно проверить, но не обязательно
+</script>
+</body>
+</html>
