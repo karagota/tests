@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Раздвоение комбинаций</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f0f4f8;
+            padding: 20px 12px 40px;
+            color: #0b1e33;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px 16px 30px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .subhead {
+            font-size: 14px;
+            color: #4a5b6e;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e9edf2;
+            padding-bottom: 12px;
+        }
+        .status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            padding: 10px 16px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 18px;
+            font-weight: 600;
+        }
+        .status .bits {
+            background: #1e293b;
+            color: #a5f3fc;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-family: "Courier New", monospace;
+            font-size: 18px;
+        }
+        .status .count {
+            background: #3b82f6;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 18px;
+        }
+        .combo-container {
+            min-height: 120px;
+            margin: 12px 0 18px;
+            padding: 10px 4px;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+        .combo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.3s ease;
+        }
+        .combo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 8px;
+            font-family: "Courier New", monospace;
+            font-weight: 600;
+            font-size: 18px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.4s ease;
+            position: relative;
+            height: 40px;
+            opacity: 1;
+            transform: scale(1);
+        }
+        .combo-row .label {
+            font-size: 12px;
+            color: #6b7f94;
+            margin-right: 8px;
+            font-weight: 400;
+        }
+        .combo-row .color-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        /* Анимация исчезновения (раздвоения) */
+        .combo-row.split {
+            animation: split 0.6s ease forwards;
+        }
+        @keyframes split {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.8) rotate(2deg); opacity: 0.6; }
+            100% { transform: scale(0) rotate(5deg); opacity: 0; }
+        }
+        /* Анимация появления новых строк */
+        .combo-row.appear {
+            animation: appear 0.5s ease forwards;
+        }
+        @keyframes appear {
+            0% { transform: scale(0.5) translateY(-10px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 30px;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            touch-action: manipulation;
+            width: 100%;
+            text-align: center;
+        }
+        .btn:active {
+            transform: scale(0.96);
+            background: #2563eb;
+        }
+        .btn:disabled {
+            background: #94a3b8;
+            transform: scale(1);
+        }
+        .btn.success {
+            background: #22c55e;
+        }
+        .btn.success:active {
+            background: #16a34a;
+        }
+        .btn.outline {
+            background: white;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+        .btn.outline:active {
+            background: #eff6ff;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .actions .btn {
+            flex: 1;
+            min-width: 80px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #8899ae;
+            text-align: center;
+        }
+        .message {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            color: #1e3a5f;
+            padding: 8px;
+            background: #eef2ff;
+            border-radius: 30px;
+            margin: 6px 0 12px;
+            display: none;
+        }
+        .message.show {
+            display: block;
+        }
+        @media (max-width: 480px) {
+            .combo-row {
+                font-size: 16px;
+                height: 36px;
+                padding: 4px 6px;
+            }
+            .status .bits {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🧬 Раздвоение комбинаций</h1>
+    <div class="subhead">Каждая комбинация делится на две — с добавлением 0 и 1</div>
+
+    <div class="status">
+        <span>Переключателей: <span class="bits" id="bitCountDisplay">1</span></span>
+        <span>Вариантов: <span class="count" id="variantCountDisplay">2</span></span>
+    </div>
+
+    <div id="message" class="message">✨ Каждая строка разделяется на две!</div>
+
+    <div class="combo-container" id="comboContainer">
+        <div class="combo-list" id="comboList"></div>
+    </div>
+
+    <div class="actions">
+        <button class="btn" id="addBtn">➕ Добавить переключатель</button>
+        <button class="btn outline" id="resetBtn">🔄 Начать с 1</button>
+    </div>
+
+    <div class="footer">Цвет показывает, какая старая комбинация породила новые</div>
+</div>
+
+<script>
+    (function() {
+        let currentBits = 1;
+        let combos = ['0', '1']; // массив строк
+        let isAnimating = false;
+        let colorMap = {}; // чтобы запомнить цвет для каждой комбинации
+
+        const comboList = document.getElementById('comboList');
+        const bitCountDisplay = document.getElementById('bitCountDisplay');
+        const variantCountDisplay = document.getElementById('variantCountDisplay');
+        const addBtn = document.getElementById('addBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const message = document.getElementById('message');
+
+        // Генерация случайного цвета (насыщенного)
+        function randomColor() {
+            const hue = Math.floor(Math.random() * 360);
+            return `hsl(${hue}, 70%, 60%)`;
+        }
+
+        // Рендеринг списка (без анимации, используется при сбросе)
+        function renderCombos() {
+            comboList.innerHTML = '';
+            combos.forEach((combo, index) => {
+                const row = document.createElement('div');
+                row.className = 'combo-row';
+                // Если есть цвет в colorMap, используем его, иначе дадим случайный
+                if (!colorMap[combo]) {
+                    colorMap[combo] = randomColor();
+                }
+                const dot = document.createElement('span');
+                dot.className = 'color-dot';
+                dot.style.backgroundColor = colorMap[combo];
+                row.appendChild(dot);
+
+                const label = document.createElement('span');
+                label.className = 'label';
+                label.textContent = `#${index+1}`;
+                row.appendChild(label);
+
+                const text = document.createTextNode(combo);
+                row.appendChild(text);
+                comboList.appendChild(row);
+            });
+            updateStatus();
+        }
+
+        function updateStatus() {
+            bitCountDisplay.textContent = currentBits;
+            variantCountDisplay.textContent = combos.length;
+        }
+
+        // Добавление бита с анимацией раздвоения
+        function addBit() {
+            if (isAnimating) return;
+            if (currentBits >= 6) {
+                alert('Максимум 6 переключателей для наглядности');
+                return;
+            }
+
+            isAnimating = true;
+            addBtn.disabled = true;
+            message.classList.add('show');
+
+            // 1. Сохраняем старые комбинации и их цвета
+            const oldCombos = combos.slice();
+            // Для каждой старой комбинации сохраним её цвет
+            const oldColors = oldCombos.map(c => colorMap[c] || randomColor());
+
+            // 2. Строим новые комбинации: сначала все с 0, потом все с 1
+            const newCombos = [];
+            oldCombos.forEach(c => newCombos.push(c + '0'));
+            oldCombos.forEach(c => newCombos.push(c + '1'));
+
+            // 3. Назначаем цвета для новых: каждая пара наследует цвет родителя
+            const newColors = [];
+            oldColors.forEach(col => {
+                newColors.push(col);
+            });
+            oldColors.forEach(col => {
+                newColors.push(col);
+            });
+
+            // 4. Анимируем исчезновение старых строк
+            const rows = comboList.querySelectorAll('.combo-row');
+            rows.forEach((row, idx) => {
+                row.classList.add('split');
+                row.addEventListener('animationend', function handler() {
+                    row.removeEventListener('animationend', handler);
+                    row.remove();
+                });
+            });
+
+            // 5. Через задержку добавляем новые строки с анимацией появления
+            setTimeout(() => {
+                // Обновляем состояние
+                combos = newCombos;
+                currentBits++;
+                // Обновляем colorMap для новых комбинаций
+                newCombos.forEach((combo, idx) => {
+                    colorMap[combo] = newColors[idx];
+                });
+
+                // Создаём новые строки
+                newCombos.forEach((combo, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'combo-row appear';
+                    const dot = document.createElement('span');
+                    dot.className = 'color-dot';
+                    dot.style.backgroundColor = newColors[index];
+                    row.appendChild(dot);
+
+                    const label = document.createElement('span');
+                    label.className = 'label';
+                    label.textContent = `#${index+1}`;
+                    row.appendChild(label);
+
+                    const text = document.createTextNode(combo);
+                    row.appendChild(text);
+                    comboList.appendChild(row);
+                });
+
+                updateStatus();
+                message.classList.remove('show');
+                isAnimating = false;
+                addBtn.disabled = false;
+            }, 600); // соответствует длительности анимации split
+        }
+
+        // Сброс к 1 биту
+        function resetTo1() {
+            if (isAnimating) return;
+            comboList.innerHTML = '';
+            combos = ['0', '1'];
+            currentBits = 1;
+            colorMap = { '0': randomColor(), '1': randomColor() };
+            renderCombos();
+            updateStatus();
+            addBtn.disabled = false;
+            message.classList.remove('show');
+        }
+
+        // Инициализация
+        colorMap = { '0': '#ef4444', '1': '#3b82f6' }; // стартовые цвета
+        renderCombos();
+
+        addBtn.addEventListener('click', addBit);
+        resetBtn.addEventListener('click', resetTo1);
+
+        // Клавиатура: пробел – добавить бит
+        document.addEventListener('keydown', function(e) {
+            if (e.key === ' ' || e.key === 'Space') {
+                e.preventDefault();
+                addBit();
+            }
+        });
+    })();
+</script>
+</body>
+</html>
