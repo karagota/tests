@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Анимация добавления переключателя</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f0f4f8;
+            padding: 20px 12px 40px;
+            color: #0b1e33;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px 16px 30px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .subhead {
+            font-size: 14px;
+            color: #4a5b6e;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #e9edf2;
+            padding-bottom: 12px;
+        }
+        .status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 18px;
+            font-weight: 600;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .status .bits {
+            background: #1e293b;
+            color: #a5f3fc;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-family: "Courier New", monospace;
+            font-size: 18px;
+        }
+        .status .count {
+            background: #3b82f6;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 18px;
+        }
+        .combo-container {
+            position: relative;
+            min-height: 120px;
+            margin: 12px 0 18px;
+            padding: 10px 4px;
+            background: #f8fafc;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+        .combo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.3s ease;
+        }
+        .combo-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 8px;
+            font-family: "Courier New", monospace;
+            font-weight: 600;
+            font-size: 18px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.4s ease;
+            position: relative;
+            opacity: 1;
+            transform: scale(1);
+            height: 40px;
+        }
+        .combo-row .label {
+            font-size: 12px;
+            color: #6b7f94;
+            margin-right: 8px;
+            font-weight: 400;
+        }
+        /* Анимация разделения */
+        .combo-row.split {
+            animation: split 0.5s ease forwards;
+        }
+        @keyframes split {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        .combo-row.appear {
+            animation: appear 0.5s ease forwards;
+        }
+        @keyframes appear {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 30px;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+            touch-action: manipulation;
+            width: 100%;
+            text-align: center;
+        }
+        .btn:active {
+            transform: scale(0.96);
+            background: #2563eb;
+        }
+        .btn:disabled {
+            background: #94a3b8;
+            transform: scale(1);
+        }
+        .btn.success {
+            background: #22c55e;
+        }
+        .btn.success:active {
+            background: #16a34a;
+        }
+        .btn.outline {
+            background: white;
+            color: #3b82f6;
+            border: 2px solid #3b82f6;
+        }
+        .btn.outline:active {
+            background: #eff6ff;
+        }
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .actions .btn {
+            flex: 1;
+            min-width: 80px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #8899ae;
+            text-align: center;
+        }
+        @media (max-width: 480px) {
+            .combo-row {
+                font-size: 16px;
+                height: 36px;
+                padding: 4px 6px;
+            }
+            .status .bits {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🧩 Добавление переключателя</h1>
+    <div class="subhead">Смотри, как каждая комбинация раздваивается при добавлении нового бита</div>
+
+    <div class="status">
+        <span>Переключателей: <span class="bits" id="bitCountDisplay">1</span></span>
+        <span>Вариантов: <span class="count" id="variantCountDisplay">2</span></span>
+    </div>
+
+    <div class="combo-container" id="comboContainer">
+        <div class="combo-list" id="comboList"></div>
+    </div>
+
+    <div class="actions">
+        <button class="btn" id="addBtn">➕ Добавить переключатель</button>
+        <button class="btn outline" id="resetBtn">🔄 Начать с 1</button>
+    </div>
+
+    <div class="footer">Каждый новый переключатель удваивает число комбинаций</div>
+</div>
+
+<script>
+    (function() {
+        // Состояние
+        let currentBits = 1;
+        let combos = ['0', '1']; // массив строк (комбинации)
+        let isAnimating = false;
+
+        const comboList = document.getElementById('comboList');
+        const bitCountDisplay = document.getElementById('bitCountDisplay');
+        const variantCountDisplay = document.getElementById('variantCountDisplay');
+        const addBtn = document.getElementById('addBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Функция рендеринга списка без анимации (используется при сбросе)
+        function renderCombos() {
+            comboList.innerHTML = '';
+            combos.forEach((combo, index) => {
+                const row = document.createElement('div');
+                row.className = 'combo-row';
+                row.textContent = combo;
+                // Добавим маленький номер
+                const label = document.createElement('span');
+                label.className = 'label';
+                label.textContent = `#${index+1}`;
+                row.prepend(label);
+                comboList.appendChild(row);
+            });
+            updateStatus();
+        }
+
+        // Обновить счётчики
+        function updateStatus() {
+            bitCountDisplay.textContent = currentBits;
+            variantCountDisplay.textContent = combos.length;
+        }
+
+        // Добавление переключателя с анимацией
+        function addBit() {
+            if (isAnimating) return;
+            if (currentBits >= 6) {
+                alert('Максимум 6 переключателей для наглядности');
+                return;
+            }
+
+            isAnimating = true;
+            addBtn.disabled = true;
+
+            // 1. Сохраняем старые комбинации
+            const oldCombos = combos.slice();
+            const newCombos = [];
+
+            // 2. Строим новые комбинации (сначала с 0, потом с 1 для каждой старой)
+            oldCombos.forEach(c => {
+                newCombos.push(c + '0');
+            });
+            oldCombos.forEach(c => {
+                newCombos.push(c + '1');
+            });
+
+            // 3. Анимируем исчезновение старых строк
+            const rows = comboList.querySelectorAll('.combo-row');
+            rows.forEach((row, idx) => {
+                // Добавляем класс split, который запускает анимацию исчезновения
+                row.classList.add('split');
+                // После окончания анимации удалим элемент
+                row.addEventListener('animationend', function handler() {
+                    row.removeEventListener('animationend', handler);
+                    row.remove();
+                });
+            });
+
+            // 4. Через небольшую задержку добавляем новые строки с анимацией появления
+            setTimeout(() => {
+                // Обновляем массив комбинаций
+                combos = newCombos;
+                currentBits++;
+
+                // Создаём новые строки
+                combos.forEach((combo, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'combo-row appear';
+                    row.textContent = combo;
+                    const label = document.createElement('span');
+                    label.className = 'label';
+                    label.textContent = `#${index+1}`;
+                    row.prepend(label);
+                    comboList.appendChild(row);
+                });
+
+                // Обновляем статус
+                updateStatus();
+
+                // Разрешаем кнопку
+                isAnimating = false;
+                addBtn.disabled = false;
+            }, 500); // время совпадает с длительностью анимации в CSS (0.5s)
+        }
+
+        // Сброс к 1 биту
+        function resetTo1() {
+            if (isAnimating) return;
+            // Останавливаем все анимации, очищаем список
+            comboList.innerHTML = '';
+            combos = ['0', '1'];
+            currentBits = 1;
+            renderCombos();
+            updateStatus();
+            addBtn.disabled = false;
+        }
+
+        // Инициализация
+        renderCombos();
+
+        addBtn.addEventListener('click', addBit);
+        resetBtn.addEventListener('click', resetTo1);
+
+        // Клавиатура: пробел – добавить бит
+        document.addEventListener('keydown', function(e) {
+            if (e.key === ' ' || e.key === 'Space') {
+                e.preventDefault();
+                addBit();
+            }
+        });
+
+    })();
+</script>
+</body>
+</html>
