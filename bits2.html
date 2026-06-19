@@ -3,13 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Раздвоение комбинаций с цветной разметкой</title>
+    <title>Раздвоение комбинаций</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: #f0f4f8;
@@ -46,8 +42,6 @@
             border: 1px solid #e2e8f0;
             margin-bottom: 18px;
             font-weight: 600;
-            flex-wrap: wrap;
-            gap: 8px;
         }
         .status .bits {
             background: #1e293b;
@@ -67,7 +61,7 @@
         .combo-container {
             min-height: 120px;
             margin: 12px 0 18px;
-            padding: 10px 4px;
+            padding: 10px 6px;
             background: #f8fafc;
             border-radius: 16px;
             border: 1px solid #e2e8f0;
@@ -77,7 +71,7 @@
         .combo-list {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
             transition: all 0.3s ease;
         }
         .combo-row {
@@ -86,7 +80,7 @@
             justify-content: center;
             padding: 6px 8px;
             font-family: "Courier New", monospace;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 18px;
             background: white;
             border-radius: 8px;
@@ -103,6 +97,14 @@
             margin-right: 8px;
             font-weight: 400;
         }
+        /* Цветные символы */
+        .combo-row .old-part {
+            color: #1e293b;
+            font-weight: 700;
+        }
+        .combo-row .new-digit {
+            font-weight: 700;
+        }
         .combo-row .color-dot {
             width: 14px;
             height: 14px;
@@ -111,17 +113,16 @@
             margin-right: 10px;
             flex-shrink: 0;
         }
-        .combo-row .inherited {
-            color: inherit;
-        }
-        .combo-row .newbit {
-            color: #f97316; /* оранжевый */
-            font-weight: 800;
-        }
-        .combo-row .bits-container {
-            display: inline-flex;
-            gap: 0;
-            letter-spacing: 1px;
+        /* Группа из двух строк (пара наследников) */
+        .combo-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border-left: 4px solid #ccc;
+            padding-left: 6px;
+            margin-bottom: 2px;
+            border-radius: 0 8px 8px 0;
+            transition: border-color 0.5s;
         }
         /* Анимация исчезновения (раздвоения) */
         .combo-row.split {
@@ -222,7 +223,7 @@
 <body>
 <div class="container">
     <h1>🧬 Раздвоение комбинаций</h1>
-    <div class="subhead">Каждая комбинация делится на две — с добавлением <span style="color:#f97316; font-weight:bold;">0</span> или <span style="color:#f97316; font-weight:bold;">1</span></div>
+    <div class="subhead">Каждая комбинация делится на две — с добавлением 0 и 1</div>
 
     <div class="status">
         <span>Переключателей: <span class="bits" id="bitCountDisplay">1</span></span>
@@ -240,7 +241,7 @@
         <button class="btn outline" id="resetBtn">🔄 Начать с 1</button>
     </div>
 
-    <div class="footer">Старые биты — цвет родителя, новый бит — <span style="color:#f97316; font-weight:bold;">оранжевый</span></div>
+    <div class="footer">Цвет старого набора сохраняется у наследников, новые цифры — другого цвета, рамка объединяет пару</div>
 </div>
 
 <script>
@@ -248,7 +249,7 @@
         let currentBits = 1;
         let combos = ['0', '1']; // массив строк
         let isAnimating = false;
-        let colorMap = {}; // строка -> цвет для унаследованной части
+        let colorMap = {}; // для хранения цвета родительской комбинации
 
         const comboList = document.getElementById('comboList');
         const bitCountDisplay = document.getElementById('bitCountDisplay');
@@ -260,66 +261,38 @@
         // Генерация случайного цвета (насыщенного)
         function randomColor() {
             const hue = Math.floor(Math.random() * 360);
-            return `hsl(${hue}, 70%, 55%)`;
+            return `hsl(${hue}, 70%, 60%)`;
         }
 
-        // Создание элемента строки с цветной разметкой
-        function createComboRow(combo, color, index) {
-            const row = document.createElement('div');
-            row.className = 'combo-row';
+        // Создание HTML для одной комбинации с цветами и рамкой
+        function createRowHTML(combo, color, isAppear = false) {
+            // Последний символ — новый, остальные — старые
+            const oldPart = combo.slice(0, -1);
+            const newDigit = combo.slice(-1);
+            // Цвет для добавленной цифры — контрастный к цвету родителя
+            // Используем дополнительный цвет (желтый или оранжевый)
+            const digitColor = '#f59e0b'; // жёлтый
 
-            // Цветной кружок
-            const dot = document.createElement('span');
-            dot.className = 'color-dot';
-            dot.style.backgroundColor = color;
-            row.appendChild(dot);
-
-            // Номер
-            const label = document.createElement('span');
-            label.className = 'label';
-            label.textContent = `#${index+1}`;
-            row.appendChild(label);
-
-            // Контейнер для битов
-            const container = document.createElement('span');
-            container.className = 'bits-container';
-
-            // Разбиваем строку: старые биты и последний (новый)
-            if (combo.length === 1) {
-                // Первый шаг: всего один бит, его тоже считаем унаследованным? 
-                // Но для первого шага мы просто покажем его цветом родителя (или специальным)
-                // Для наглядности на первом шаге сделаем все биты цветом родителя (без оранжевого)
-                const span = document.createElement('span');
-                span.textContent = combo;
-                span.style.color = color;
-                container.appendChild(span);
-            } else {
-                const inherited = combo.slice(0, -1);
-                const newBit = combo.slice(-1);
-                // Унаследованная часть
-                const spanInherited = document.createElement('span');
-                spanInherited.textContent = inherited;
-                spanInherited.style.color = color;
-                container.appendChild(spanInherited);
-                // Новый бит
-                const spanNew = document.createElement('span');
-                spanNew.textContent = newBit;
-                spanNew.className = 'newbit'; // оранжевый
-                container.appendChild(spanNew);
-            }
-
-            row.appendChild(container);
-            return row;
+            return `
+                <div class="combo-row ${isAppear ? 'appear' : ''}">
+                    <span class="color-dot" style="background-color: ${color};"></span>
+                    <span class="label">#</span>
+                    <span class="old-part" style="color: ${color};">${oldPart}</span>
+                    <span class="new-digit" style="color: ${digitColor};">${newDigit}</span>
+                </div>
+            `;
         }
 
-        // Рендеринг списка (без анимации, используется при сбросе)
+        // Функция рендеринга списка (при сбросе)
         function renderCombos() {
             comboList.innerHTML = '';
+            // Группируем по две? Для старта просто строки
             combos.forEach((combo, index) => {
                 const color = colorMap[combo] || randomColor();
-                if (!colorMap[combo]) colorMap[combo] = color;
-                const row = createComboRow(combo, color, index);
-                comboList.appendChild(row);
+                const rowHTML = createRowHTML(combo, color, false);
+                const temp = document.createElement('div');
+                temp.innerHTML = rowHTML;
+                comboList.appendChild(temp.firstElementChild);
             });
             updateStatus();
         }
@@ -350,14 +323,19 @@
             oldCombos.forEach(c => newCombos.push(c + '0'));
             oldCombos.forEach(c => newCombos.push(c + '1'));
 
-            // 3. Назначаем цвета для новых: каждая пара наследует цвет родителя
+            // 3. Назначаем цвета: каждая пара наследует цвет родителя
             const newColors = [];
-            oldColors.forEach(col => newColors.push(col));
-            oldColors.forEach(col => newColors.push(col));
+            oldColors.forEach(col => { newColors.push(col); });
+            oldColors.forEach(col => { newColors.push(col); });
 
-            // 4. Анимируем исчезновение старых строк
+            // 4. Обновляем colorMap
+            newCombos.forEach((combo, idx) => {
+                colorMap[combo] = newColors[idx];
+            });
+
+            // 5. Анимируем исчезновение старых строк
             const rows = comboList.querySelectorAll('.combo-row');
-            rows.forEach((row, idx) => {
+            rows.forEach((row) => {
                 row.classList.add('split');
                 row.addEventListener('animationend', function handler() {
                     row.removeEventListener('animationend', handler);
@@ -365,29 +343,50 @@
                 });
             });
 
-            // 5. Через задержку добавляем новые строки с анимацией появления
+            // 6. Через задержку добавляем новые строки с группировкой по парам
             setTimeout(() => {
                 // Обновляем состояние
                 combos = newCombos;
                 currentBits++;
-                // Обновляем colorMap для новых комбинаций
-                newCombos.forEach((combo, idx) => {
-                    colorMap[combo] = newColors[idx];
-                });
 
-                // Создаём новые строки
-                newCombos.forEach((combo, index) => {
-                    const color = newColors[index];
-                    const row = createComboRow(combo, color, index);
-                    row.classList.add('appear');
-                    comboList.appendChild(row);
-                });
+                // Очищаем список (на случай, если остались элементы)
+                comboList.innerHTML = '';
+
+                // Группируем новые комбинации по парам (родитель + его наследники)
+                // oldCombos.length == количество родителей
+                const parentCount = oldCombos.length;
+                for (let i = 0; i < parentCount; i++) {
+                    // Создаём группу (рамка)
+                    const group = document.createElement('div');
+                    group.className = 'combo-group';
+                    // Цвет рамки — цвет родителя
+                    const parentColor = oldColors[i];
+                    group.style.borderColor = parentColor;
+
+                    // Первая дочь (с 0)
+                    const child0 = newCombos[i];
+                    const color0 = newColors[i];
+                    const row0HTML = createRowHTML(child0, color0, true);
+                    const temp0 = document.createElement('div');
+                    temp0.innerHTML = row0HTML;
+                    group.appendChild(temp0.firstElementChild);
+
+                    // Вторая дочь (с 1)
+                    const child1 = newCombos[i + parentCount];
+                    const color1 = newColors[i + parentCount];
+                    const row1HTML = createRowHTML(child1, color1, true);
+                    const temp1 = document.createElement('div');
+                    temp1.innerHTML = row1HTML;
+                    group.appendChild(temp1.firstElementChild);
+
+                    comboList.appendChild(group);
+                }
 
                 updateStatus();
                 message.classList.remove('show');
                 isAnimating = false;
                 addBtn.disabled = false;
-            }, 600); // соответствует длительности анимации split
+            }, 600); // совпадает с длительностью split
         }
 
         // Сброс к 1 биту
@@ -396,10 +395,7 @@
             comboList.innerHTML = '';
             combos = ['0', '1'];
             currentBits = 1;
-            colorMap = {};
-            // Присвоим цвета для двух начальных комбинаций
-            colorMap['0'] = '#ef4444';
-            colorMap['1'] = '#3b82f6';
+            colorMap = { '0': '#ef4444', '1': '#3b82f6' };
             renderCombos();
             updateStatus();
             addBtn.disabled = false;
